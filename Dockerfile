@@ -10,11 +10,10 @@ RUN go build -ldflags="-s -w" -o demo-app .
 # ---- Runtime Stage ----
 FROM alpine:3.19
 
-# OpenShift runners use random UIDs; file permissions must be set accordingly
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
-    && mkdir -p /data/app \
-    && chown -R appuser:appgroup /data/app \
-    && chmod -R g+rwX /data/app   # Group write is required for OpenShift random-UID
+# OpenShift runners use random UIDs but are always members of the root group (GID 0)
+RUN mkdir -p /data/app && \
+    chgrp -R 0 /data/app && \
+    chmod -R g=u /data/app
 
 USER appuser
 WORKDIR /app
