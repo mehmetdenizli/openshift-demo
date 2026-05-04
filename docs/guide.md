@@ -496,5 +496,35 @@ oc new-project demo
 
 ---
 
+## 14. Deployment via Web Console (Portal)
+
+While CLI provides more control, the OpenShift Web Console offers a visual and automated way to deploy applications directly from Git.
+
+### Steps for Deployment
+
+1.  **Switch to Developer Perspective:** Ensure you are in the "Developer" view in the top-left corner of the console.
+2.  **Create/Select Project:** Choose your `demo` project.
+3.  **Click "+Add":** Select the **"Import from Git"** option.
+4.  **Configure Git:**
+    *   **Git Repo URL:** `https://github.com/mehmetdenizli/openshift-demo.git`
+    *   **Strategy:** OpenShift will automatically detect the `Dockerfile`.
+5.  **Create:** Click the **"Create"** button at the bottom.
+
+### What Happens Automatically?
+
+When using "Import from Git", OpenShift creates several resources for you:
+*   **BuildConfig & ImageStream:** To handle the build from GitHub.
+*   **Deployment:** To run the application.
+*   **Service:** To expose the application internally.
+*   **Route:** To provide an external URL.
+
+### Advantages of Portal Deployment
+
+*   **Automation (Webhooks):** You can set up a GitHub Webhook so that every `git push` automatically triggers a new build and deployment.
+*   **Topology View:** Provides a clear visual representation of your application's status (as seen in the screenshot).
+*   **Easy Scaling:** You can scale pod replicas by simply clicking the up/down arrows on the deployment circle.
+
+---
+
 > **💡 Tip:** `oc explain <resource>` command documents fields of any resource.  
 > Example: `oc explain deployment.spec.strategy`
