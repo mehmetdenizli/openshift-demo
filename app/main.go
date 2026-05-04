@@ -161,6 +161,11 @@ func writeStorageFile() (filename, content string) {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	// Ignore favicon.ico requests to avoid double-counting hits
+	if r.URL.Path == "/favicon.ico" {
+		return
+	}
+
 	hitCount++
 
 	// Read env vars injected via ConfigMap
