@@ -96,13 +96,15 @@ var htmlTemplate = `<!DOCTYPE html>
         </div>
 
         <!-- Image Info -->
-        <div class="card">
-            <h2>🖼️ Image Registry</h2>
-            <p>Image<br><span class="value">{{.ImageRef}}</span></p>
+        <div class="card" style="border-top: 4px solid #5eb8ff;">
+            <h2>🖼️ Image & Build Info</h2>
+            <p>Version / Tag<br><span class="badge purple" style="font-size: 1.2rem;">{{.AppVersion}}</span></p>
+            <br>
+            <p>Current Image<br><span class="value" style="color: #ffaa33;">{{.ImageRef}}</span></p>
             <br>
             <p>Build Date<br><span class="badge">{{.BuildDate}}</span></p>
             <br>
-            <p>Go Version<br><span class="badge">{{.GoVersion}}</span></p>
+            <p>Go Version<br><span class="badge green">{{.GoVersion}}</span></p>
         </div>
 
     </div>
@@ -123,6 +125,7 @@ type pageData struct {
 	AppEnv         string
 	AppColor       string
 	AppMessage     string
+	AppVersion     string
 	DbUser         string
 	DbPassLen      int
 	StorageFile    string
@@ -152,7 +155,7 @@ func writeStorageFile() (filename, content string) {
 	filename = fmt.Sprintf("%s/hit-%d.txt", dir, hitCount)
 	content = fmt.Sprintf("visit=%d time=%s", hitCount, time.Now().Format(time.RFC3339))
 	if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
-		return filename, "could not write: " + err.Error()
+		return filename, "could not write: " + err.Error() + " (path: " + filename + ")"
 	}
 	return filename, content
 }
@@ -164,6 +167,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	appEnv     := env("APP_ENV", "development")
 	appColor   := env("APP_COLOR", "red")
 	appMessage := env("APP_MESSAGE", "Hello OpenShift!")
+	appVersion := env("APP_VERSION", "v1.0.0")
 
 	// Read env vars injected via Secret
 	dbUser  := env("DB_USER", "(no secret)")
@@ -184,6 +188,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		AppEnv:         appEnv,
 		AppColor:       appColor,
 		AppMessage:     appMessage,
+		AppVersion:     appVersion,
 		DbUser:         dbUser,
 		DbPassLen:      len(dbPass),
 		StorageFile:    storageFile,
