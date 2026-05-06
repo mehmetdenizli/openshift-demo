@@ -2,7 +2,7 @@
 
 This demo illustrates the core OpenShift developer experience: converting source code into a running container image without writing a Dockerfile, using **Source-to-Image (S2I)**, **BuildConfig**, and **ImageStream**.
 
-We will be using our own Python application located in the `python-app/` directory of this repository.
+We will be using our own Python application located in the `S2I-demo/python-app/` directory of this repository.
 
 ## Core Concepts
 - **BuildConfig (BC):** The "recipe" for how to build your application. It defines the source code location and the builder image to use.
@@ -22,13 +22,13 @@ oc new-project s2i-demo
 We use the `oc new-app` command, specifying the Python builder image, our repository URL, and the directory where our code lives (`--context-dir`).
 
 ```bash
-oc new-app python:3.9-ubi8~https://github.com/mehmetdenizli/openshift-demo.git --context-dir=python-app --name=python-s2i
+oc new-app python:3.9-ubi8~https://github.com/mehmetdenizli/openshift-demo.git --context-dir=S2I-demo/python-app --name=python-s2i
 ```
 
 **What happened here?**
 - `python:3.9-ubi8`: The **Builder ImageStream** (Input).
 - `https://...`: **Our Source Code** (Input).
-- `--context-dir=python-app`: Tells OpenShift that the code is in a specific folder.
+- `--context-dir=S2I-demo/python-app`: Tells OpenShift that the code is in a specific folder.
 - OpenShift automatically created a **BuildConfig** and an **ImageStream** for the output image.
 
 ### Step 3: Inspect BuildConfig and ImageStream
@@ -38,7 +38,7 @@ Verify the automation objects created by OpenShift.
 ```bash
 oc get bc python-s2i -o yaml
 ```
-> **Focus points:** Look for `strategy: type: Source` and `output: to: kind: ImageStreamTag`. This tells OpenShift: "Take the source from `python-app/`, build it, and push the result to the ImageStream."
+> **Focus points:** Look for `strategy: type: Source` and `output: to: kind: ImageStreamTag`. This tells OpenShift: "Take the source from `S2I-demo/python-app/`, build it, and push the result to the ImageStream."
 
 **Check ImageStream:**
 ```bash
