@@ -10,6 +10,10 @@ RUN go build -ldflags="-s -w" -o demo-app .
 # ---- Runtime Stage ----
 FROM alpine:3.19
 
+# Set Build Date (This will be overwritten if passed as --build-arg)
+ARG BUILD_DATE=unknown
+ENV BUILD_DATE=$BUILD_DATE
+
 # OpenShift runners use random UIDs but are always members of the root group (GID 0)
 RUN mkdir -p /data/app && \
     chgrp -R 0 /data/app && \

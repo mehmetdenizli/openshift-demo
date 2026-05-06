@@ -12,25 +12,22 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: demo-app-config
+  name: openshift-demo-git-config
   namespace: demo
 data:
   APP_ENV: "production"
-  APP_COLOR: "red"
+  APP_COLOR: "blue"
   APP_MESSAGE: "Hello OpenShift CRC! 🚀"
-  APP_VERSION: "v1.0.0"
-  ROUTE_URL: "http://demo-app-demo.apps-crc.testing"
+  APP_VERSION: "v1.1.0"
+  ROUTE_URL: "http://openshift-demo-git-demo.apps-crc.testing"
 ---
 # ============================================================
 # 3. Secret — Sensitive data (base64 encoded)
-#    echo -n "adminuser" | base64   → YWRtaW51c2Vy
-#    echo -n "S3cur3P@ss!" | base64 → UzNjdXIzUEBzcyE=
-#    echo -n "myapikey123" | base64 → bXlhcGlrZXkxMjM=
 # ============================================================
 apiVersion: v1
 kind: Secret
 metadata:
-  name: demo-app-secret
+  name: openshift-demo-git-secret
   namespace: demo
 type: Opaque
 data:
@@ -44,15 +41,15 @@ data:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: demo-app-pvc
+  name: openshift-demo-git-pvc
   namespace: demo
 spec:
   accessModes:
-    - ReadWriteOnce          # single pod can read/write
+    - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-  storageClassName: crc-csi-hostpath-provisioner   # Default SC for CRC
+  storageClassName: crc-csi-hostpath-provisioner
 ---
 # ============================================================
 # 5. Deployment
@@ -60,120 +57,72 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: demo-app
+  name: openshift-demo-git
   namespace: demo
   labels:
-    app: demo-app
-    version: "1.0"
+    app: openshift-demo-git
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: demo-app
+      app: openshift-demo-git
   template:
     metadata:
       labels:
-        app: demo-app
+        app: openshift-demo-git
     spec:
       containers:
-        - name: demo-app
-          image: image-registry.openshift-image-registry.svc:5000/demo/demo-app:latest
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-
-          # --- Environment variables from ConfigMap and Secret ---
-          envFrom:
-            - configMapRef:
-                name: demo-app-config
-            - secretRef:
-                name: demo-app-secret
-
-          # --- Downward API: Inject pod metadata as env vars ---
-          env:
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-
-          # --- PVC mount ---
-          volumeMounts:
-            - name: app-storage
-              mountPath: /data/app
-
-          # --- Health probes ---
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 10
-
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 8080
-            initialDelaySeconds: 3
-            periodSeconds: 5
-
-          resources:
-            requests:
-              memory: "64Mi"
-              cpu: "50m"
-            limits:
-              memory: "128Mi"
-              cpu: "200m"
-
+      - name: openshift-demo-git
+        image: image-registry.openshift-image-registry.svc:5000/demo/openshift-demo-git:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: openshift-demo-git-config
+        - secretRef:
+            name: openshift-demo-git-secret
+        volumeMounts:
+        - name: storage-volume
+          mountPath: /data/app
       volumes:
-        - name: app-storage
-          persistentVolumeClaim:
-            claimName: demo-app-pvc
-
-      # No imagePullSecrets needed for OpenShift Internal Registry
-      # (builder SA in the same namespace is already authorized)
+      - name: storage-volume
+        persistentVolumeClaim:
+          claimName: openshift-demo-git-pvc
 ---
 # ============================================================
-# 6. Service — Exposes pods within the cluster
+# 6. Service
 # ============================================================
 apiVersion: v1
 kind: Service
 metadata:
-  name: demo-app
+  name: openshift-demo-git
   namespace: demo
-  labels:
-    app: demo-app
 spec:
   selector:
-    app: demo-app
+    app: openshift-demo-git
   ports:
     - name: http
-      port: 8080
+      protocol: TCP
+      port: 80
       targetPort: 8080
-  type: ClusterIP
 ---
 # ============================================================
-# 7. Route — HTTP access from outside (OpenShift-specific)
+# 7. Route (External Access)
 # ============================================================
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: demo-app
+  name: openshift-demo-git
   namespace: demo
 spec:
-  host: demo-app-demo.apps-crc.testing
+  host: openshift-demo-git-demo.apps-crc.testing
   to:
     kind: Service
-    name: demo-app
+    name: openshift-demo-git
+    weight: 100
   port:
-    targetPort: http
+    targetPort: 8080
   tls:
-    termination: edge          # TLS ends here, pod receives plain HTTP
+    termination: edge
     insecureEdgeTerminationPolicy: Redirect
