@@ -9,7 +9,7 @@ def hello():
     html = "<h3>Merhaba from Python S2I!</h3>" \
            "<b>Hostname:</b> {hostname}<br/>" \
            "<b>App Version:</b> {version}<br/>"
-    return html.format(hostname=socket.gethostname(), version=os.getenv("APP_VERSION", "1.0.0"))
+    return html.format(hostname=socket.gethostname(), version=os.getenv("APP_VERSION", "1"))
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080)
